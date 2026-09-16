@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Data Recruitment - Live</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+</head>
+<body class="bg-gray-100 text-gray-800 font-sans min-h-screen flex items-center justify-center p-4">
+
+    <!-- CONTAINER UTAMA -->
+    <div id="main-container" class="max-w-md w-full bg-white rounded-xl shadow-lg p-6 overflow-hidden transition-all duration-300">
+        
+        <!-- 1. HALAMAN MENU UTAMA -->
+        <div id="page-home" class="block">
+            <h1 class="text-2xl font-bold text-center text-blue-600 mb-6">Portal Recruitment</h1>
+            <div class="space-y-4">
+                <button onclick="switchPage('page-recruitment')" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 px-4 rounded-lg transition shadow-md">
+                    A. Recruitment (Free Access)
+                </button>
+                <button onclick="switchPage('page-login')" class="w-full bg-gray-800 hover:bg-gray-900 text-white font-semibold py-3 px-4 rounded-lg transition shadow-md">
+                    B. FIELD Admin
+                </button>
+            </div>
+        </div>
+
+        <!-- 2. HALAMAN FORM RECRUITMENT -->
+        <div id="page-recruitment" class="hidden">
+            <h2 class="text-xl font-bold text-center text-blue-600 mb-4">Form Recruitment</h2>
+            <form id="formRecruitment" onsubmit="submitData(event)" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Nama (Recruiter)</label>
+                    <input type="text" id="nama_recruiter" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Nama Responden</label>
+                    <input type="text" id="nama_responden" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Kode Responden</label>
+                    <input type="text" id="kode_responden" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <button type="submit" id="btn-submit" class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-md transition shadow-md mt-4">
+                    Simpan Data ke Server
+                </button>
+                <button type="button" onclick="switchPage('page-home')" class="w-full bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-md transition mt-2">
+                    Kembali ke Menu
+                </button>
+            </form>
+        </div>
+
+        <!-- 3. HALAMAN LOGIN ADMIN -->
+        <div id="page-login" class="hidden">
+            <h2 class="text-xl font-bold text-center text-gray-800 mb-4">Login Admin</h2>
+            <form id="formLogin" onsubmit="loginAdmin(event)" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Username</label>
+                    <input type="text" id="username" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-gray-800 focus:border-gray-800">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Password</label>
+                    <input type="password" id="password" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-gray-800 focus:border-gray-800">
+                </div>
+                <p id="login-error" class="text-red-500 text-sm hidden font-medium">Username atau Password salah!</p>
+                <button type="submit" class="w-full bg-gray-800 hover:bg-gray-900 text-white font-bold py-2 px-4 rounded-md transition shadow-md mt-4">
+                    Masuk Dashboard
+                </button>
+                <button type="button" onclick="switchPage('page-home')" class="w-full bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-md transition mt-2">
+                    Kembali
+                </button>
+            </form>
+        </div>
+
+    </div>
+
+    <!-- 4. HALAMAN DASHBOARD ADMIN -->
+    <div id="page-admin" class="hidden w-full max-w-5xl bg-white rounded-xl shadow-lg p-6">
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4 border-b pb-4">
+            <div>
+                <h2 class="text-2xl font-bold text-gray-800">Dashboard Admin (Live Firebase)</h2>
+                <p class="text-gray-500 text-sm mt-1">Preview data dari server cloud.</p>
+            </div>
+            <button onclick="logoutAdmin()" class="bg-red-50 text-red-600 hover:bg-red-100 font-semibold py-2 px-4 rounded-md transition border border-red-200">
+                Logout
+            </button>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <!-- Box Limit Harian -->
+            <div class="bg-blue-50 p-4 rounded-lg border border-blue-100 flex items-center justify-between">
+                <div>
+                    <span class="block text-sm font-semibold text-blue-800">Limit Input Harian</span>
+                    <span class="text-xs text-blue-600">Batasi form yang bisa diisi per hari</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <input type="number" id="input-limit" class="w-16 px-2 py-1 border border-blue-300 rounded-md text-center focus:outline-none" min="1">
+                    <button onclick="simpanLimit()" class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold py-1.5 px-3 rounded-md transition">
+                        Save
+                    </button>
+                </div>
+            </div>
+
+            <!-- Box Statistik & Download -->
+            <div class="bg-gray-50 p-4 rounded-lg border border-gray-200 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div class="font-semibold text-gray-700 w-full sm:w-auto text-center sm:text-left">
+                    Data Masuk: <span id="total-data" class="text-gray-900 text-xl font-bold ml-1">...</span>
+                </div>
+                <div class="flex gap-2 w-full sm:w-auto">
+                    <button onclick="loadAdminData()" class="w-full sm:w-auto bg-white border border-gray-300 hover:bg-gray-100 text-gray-700 text-sm font-semibold py-2 px-3 rounded-md transition">
+                        Refresh Data
+                    </button>
+                    <button onclick="downloadExcel()" class="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white text-sm font-bold py-2 px-4 rounded-md transition shadow-md flex justify-center items-center gap-1">
+                        Download Excel
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="overflow-x-auto border rounded-lg">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-800 text-white">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">No</th>
+                        <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">Tgl/Waktu</th>
+                        <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">Nama Recruiter</th>
+                        <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">Nama Responden</th>
+                        <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">Kode Responden</th>
+                    </tr>
+                </thead>
+                <tbody id="table-body" class="bg-white divide-y divide-gray-200">
+                    <tr><td colspan="5" class="px-6 py-8 text-center text-sm text-gray-500">Memuat data dari server...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- KONFIGURASI FIREBASE SEBAGAI MODULE -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getFirestore, collection, addDoc, getDocs, query, where, orderBy } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+        // KODE FIREBASE KAMU SUDAH MASUK DI SINI
+        const firebaseConfig = {
+            apiKey: "AIzaSyD17hpo3z7d_26KlGqSsjUpXQTyInftrZU",
+            authDomain: "clt-acorn.firebaseapp.com",
+            projectId: "clt-acorn",
+            storageBucket: "clt-acorn.firebasestorage.app",
+            messagingSenderId: "695278461447",
+            appId: "1:695278461447:web:e399ba96af84d8f2e540a2",
+            measurementId: "G-H560QSN8CY"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        const ADMIN_USER = "admin";
+        const ADMIN_PASS = "admin123";
+
+        if(!localStorage.getItem('dailyLimit')) {
+            localStorage.setItem('dailyLimit', 5);
+        }
+
+        window.switchPage = function(pageId) {
+            const pages = ['page-home', 'page-recruitment', 'page-login', 'page-admin'];
+            pages.forEach(page => document.getElementById(page).classList.add('hidden'));
+            
+            if(pageId === 'page-admin') {
+                document.getElementById('main-container').classList.add('hidden');
+                document.getElementById(pageId).classList.remove('hidden');
+                document.getElementById('input-limit').value = localStorage.getItem('dailyLimit');
+                window.loadAdminData();
+            } else {
+                document.getElementById('main-container').classList.remove('hidden');
+                document.getElementById(pageId).classList.remove('hidden');
+                document.getElementById('page-admin').classList.add('hidden');
+            }
+        };
+
+        window.simpanLimit = function() {
+            const limitBaru = document.getElementById('input-limit').value;
+            if(limitBaru > 0) {
+                localStorage.setItem('dailyLimit', limitBaru);
+                alert('Limit Harian berhasil diubah menjadi: ' + limitBaru);
+            }
+        };
+
+        window.submitData = async function(event) {
+            event.preventDefault();
+            const btnSubmit = document.getElementById('btn-submit');
+            btnSubmit.innerText = "Menyimpan ke Cloud...";
+            btnSubmit.disabled = true;
+            
+            const limit = parseInt(localStorage.getItem('dailyLimit')) || 5;
+            const todayDate = new Date().toLocaleDateString('id-ID');
+            
+            try {
+                const q = query(collection(db, "recruitmentData"), where("dateOnly", "==", todayDate));
+                const querySnapshot = await getDocs(q);
+                const jumlahDataHariIni = querySnapshot.size;
+
+                if (jumlahDataHariIni >= limit) {
+                    alert('Limit harian sudah tercapai! Silakan segera menghubungi SPV Field.');
+                    btnSubmit.innerText = "Simpan Data ke Server";
+                    btnSubmit.disabled = false;
+                    return; 
+                }
+                
+                const nama = document.getElementById('nama_recruiter').value;
+                const responden = document.getElementById('nama_responden').value;
+                const kode = document.getElementById('kode_responden').value;
+                const tglLengkap = new Date().toLocaleString('id-ID');
+                const timeSort = new Date().getTime();
+
+                await addDoc(collection(db, "recruitmentData"), {
+                    timestamp: tglLengkap,
+                    timeSort: timeSort,
+                    dateOnly: todayDate,
+                    nama: nama,
+                    responden: responden,
+                    kode: kode
+                });
+
+                alert('Data berhasil masuk server!');
+                document.getElementById('formRecruitment').reset();
+                window.switchPage('page-home');
+
+            } catch (error) {
+                console.error("Error menambah dokumen: ", error);
+                alert("Gagal menyimpan data! Pastikan Database Firestore sudah diaktifkan ke Mode Test.");
+            } finally {
+                btnSubmit.innerText = "Simpan Data ke Server";
+                btnSubmit.disabled = false;
+            }
+        };
+
+        window.loginAdmin = function(event) {
+            event.preventDefault();
+            const user = document.getElementById('username').value;
+            const pass = document.getElementById('password').value;
+            if (user === ADMIN_USER && pass === ADMIN_PASS) {
+                document.getElementById('login-error').classList.add('hidden');
+                document.getElementById('formLogin').reset();
+                window.switchPage('page-admin');
+            } else {
+                document.getElementById('login-error').classList.remove('hidden');
+            }
+        };
+
+        window.logoutAdmin = function() {
+            window.switchPage('page-home');
+        };
+
+        let currentDataFirebase = [];
+
+        window.loadAdminData = async function() {
+            const tbody = document.getElementById('table-body');
+            const totalDataSpan = document.getElementById('total-data');
+            tbody.innerHTML = '<tr><td colspan="5" class="px-6 py-8 text-center text-sm text-gray-500">Memuat data dari server...</td></tr>';
+            
+            try {
+                const q = query(collection(db, "recruitmentData"), orderBy("timeSort", "desc"));
+                const querySnapshot = await getDocs(q);
+                
+                currentDataFirebase = []; 
+                querySnapshot.forEach((doc) => {
+                    currentDataFirebase.push(doc.data());
+                });
+
+                totalDataSpan.innerText = currentDataFirebase.length;
+                
+                if(currentDataFirebase.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="5" class="px-6 py-8 text-center text-sm text-gray-500 bg-gray-50">Belum ada data di server.</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = '';
+                currentDataFirebase.forEach((item, index) => {
+                    const tr = document.createElement('tr');
+                    tr.classList.add('hover:bg-gray-50');
+                    tr.innerHTML = `
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${index + 1}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${item.timestamp}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">${item.nama}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${item.responden}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900"><span class="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded">${item.kode}</span></td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+
+            } catch (error) {
+                console.error("Error menarik data: ", error);
+                tbody.innerHTML = '<tr><td colspan="5" class="px-6 py-8 text-center text-sm text-red-500 bg-red-50">Gagal menarik data! Periksa koneksi internet atau setting database Firestore (Test Mode).</td></tr>';
+            }
+        };
+
+        window.downloadExcel = function() {
+            if(currentDataFirebase.length === 0) {
+                alert('Tidak ada data dari server untuk didownload.');
+                return;
+            }
+
+            const excelData = currentDataFirebase.map((item, index) => ({
+                "No": index + 1,
+                "Waktu Input": item.timestamp,
+                "Nama Recruiter": item.nama,
+                "Nama Responden": item.responden,
+                "Kode Responden": item.kode
+            }));
+
+            const worksheet = XLSX.utils.json_to_sheet(excelData);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Data_Recruitment_Cloud");
+            XLSX.writeFile(workbook, "Data_Recruitment_Cloud.xlsx");
+        };
+    </script>
+</body>
+</html>
