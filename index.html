@@ -90,8 +90,8 @@
             <!-- Box Limit Harian -->
             <div class="bg-blue-50 p-4 rounded-lg border border-blue-100 flex items-center justify-between">
                 <div>
-                    <span class="block text-sm font-semibold text-blue-800">Limit Input Harian</span>
-                    <span class="text-xs text-blue-600">Batasi form yang bisa diisi per hari</span>
+                    <span class="block text-sm font-semibold text-blue-800">Limit Input Harian per Recruiter</span>
+                    <span class="text-xs text-blue-600">Otomatis reset pukul 00:00</span>
                 </div>
                 <div class="flex items-center gap-2">
                     <input type="number" id="input-limit" class="w-16 px-2 py-1 border border-blue-300 rounded-md text-center focus:outline-none" min="1">
@@ -104,7 +104,7 @@
             <!-- Box Statistik & Download -->
             <div class="bg-gray-50 p-4 rounded-lg border border-gray-200 flex flex-col sm:flex-row items-center justify-between gap-4">
                 <div class="font-semibold text-gray-700 w-full sm:w-auto text-center sm:text-left">
-                    Data Masuk: <span id="total-data" class="text-gray-900 text-xl font-bold ml-1">...</span>
+                    Total Data: <span id="total-data" class="text-gray-900 text-xl font-bold ml-1">...</span>
                 </div>
                 <div class="flex gap-2 w-full sm:w-auto">
                     <button onclick="loadAdminData()" class="w-full sm:w-auto bg-white border border-gray-300 hover:bg-gray-100 text-gray-700 text-sm font-semibold py-2 px-3 rounded-md transition">
@@ -140,7 +140,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getFirestore, collection, addDoc, getDocs, query, where, orderBy } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
-        // KODE FIREBASE KAMU SUDAH MASUK DI SINI
+        // KODE FIREBASE KAMU
         const firebaseConfig = {
             apiKey: "AIzaSyD17hpo3z7d_26KlGqSsjUpXQTyInftrZU",
             authDomain: "clt-acorn.firebaseapp.com",
@@ -194,19 +194,33 @@
             const limit = parseInt(localStorage.getItem('dailyLimit')) || 5;
             const todayDate = new Date().toLocaleDateString('id-ID');
             
+            // Ambil dan bersihkan input nama recruiter (hilangkan spasi depan/belakang & huruf kecil semua)
+            const rawNamaRecruiter = document.getElementById('nama_recruiter').value;
+            const inputNama = rawNamaRecruiter.trim().toLowerCase();
+            
             try {
+                // Tarik semua data yang masuk khusus hari ini saja
                 const q = query(collection(db, "recruitmentData"), where("dateOnly", "==", todayDate));
                 const querySnapshot = await getDocs(q);
-                const jumlahDataHariIni = querySnapshot.size;
+                
+                // Hitung manual di sisi sistem untuk mencegah error index Firebase & mengecek nama dengan presisi
+                let jumlahDataRecruiterHariIni = 0;
+                
+                querySnapshot.forEach((doc) => {
+                    const dbNama = doc.data().nama.trim().toLowerCase();
+                    if (dbNama === inputNama) {
+                        jumlahDataRecruiterHariIni++;
+                    }
+                });
 
-                if (jumlahDataHariIni >= limit) {
-                    alert('Limit harian sudah tercapai! Silakan segera menghubungi SPV Field.');
+                // Validasi limit per orang
+                if (jumlahDataRecruiterHariIni >= limit) {
+                    alert(`Peringatan: Recruiter "${rawNamaRecruiter}" sudah mencapai limit input harian (${limit} data). Silakan segera menghubungi SPV Field.`);
                     btnSubmit.innerText = "Simpan Data ke Server";
                     btnSubmit.disabled = false;
                     return; 
                 }
                 
-                const nama = document.getElementById('nama_recruiter').value;
                 const responden = document.getElementById('nama_responden').value;
                 const kode = document.getElementById('kode_responden').value;
                 const tglLengkap = new Date().toLocaleString('id-ID');
@@ -216,7 +230,7 @@
                     timestamp: tglLengkap,
                     timeSort: timeSort,
                     dateOnly: todayDate,
-                    nama: nama,
+                    nama: rawNamaRecruiter, // Tetap simpan huruf aslinya ke database
                     responden: responden,
                     kode: kode
                 });
